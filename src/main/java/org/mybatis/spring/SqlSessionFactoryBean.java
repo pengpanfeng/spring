@@ -483,6 +483,11 @@ public class SqlSessionFactoryBean
    */
   @Override
   public void afterPropertiesSet() throws Exception {
+    /**
+     * 框架入口
+     * spring整合mybatis入口
+     * 创建 DefaultSqlSessionFactory
+     */
     notNull(dataSource, "Property 'dataSource' is required");
     notNull(sqlSessionFactoryBuilder, "Property 'sqlSessionFactoryBuilder' is required");
     state((configuration == null && configLocation == null) || !(configuration != null && configLocation != null),
@@ -505,21 +510,28 @@ public class SqlSessionFactoryBean
   protected SqlSessionFactory buildSqlSessionFactory() throws Exception {
 
     final Configuration targetConfiguration;
-
+    /**
+     *组装Configuration类
+     */
+    //1、创建或者设置Configuration
     XMLConfigBuilder xmlConfigBuilder = null;
     if (this.configuration != null) {
+      //通过spring中配置的Configuration设置
       targetConfiguration = this.configuration;
+      //填充属性
       if (targetConfiguration.getVariables() == null) {
         targetConfiguration.setVariables(this.configurationProperties);
       } else if (this.configurationProperties != null) {
         targetConfiguration.getVariables().putAll(this.configurationProperties);
       }
     } else if (this.configLocation != null) {
+      //通过myBatista原生Configuration.xml配置文件创建
       xmlConfigBuilder = new XMLConfigBuilder(this.configLocation.getInputStream(), null, this.configurationProperties);
       targetConfiguration = xmlConfigBuilder.getConfiguration();
     } else {
       LOGGER.debug(
           () -> "Property 'configuration' or 'configLocation' not specified, using default MyBatis Configuration");
+      //创建默认的Configuration
       targetConfiguration = new Configuration();
       Optional.ofNullable(this.configurationProperties).ifPresent(targetConfiguration::setVariables);
     }
@@ -527,7 +539,7 @@ public class SqlSessionFactoryBean
     Optional.ofNullable(this.objectFactory).ifPresent(targetConfiguration::setObjectFactory);
     Optional.ofNullable(this.objectWrapperFactory).ifPresent(targetConfiguration::setObjectWrapperFactory);
     Optional.ofNullable(this.vfs).ifPresent(targetConfiguration::setVfsImpl);
-
+    //
     if (hasLength(this.typeAliasesPackage)) {
       scanClasses(this.typeAliasesPackage, this.typeAliasesSuperType).stream()
           .filter(clazz -> !clazz.isAnonymousClass()).filter(clazz -> !clazz.isInterface())
